@@ -1,0 +1,23 @@
+{
+	"files.autoSave": "afterDelay",
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"svelte.plugin.svelte.format.enable": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "always"
+	},
+	"files.associations": {
+		"*.css": "tailwindcss",
+		"*.svelte": "svelte"
+	},
+	"html.suggest.html5": true,
+	"editor.quickSuggestions": {
+		"other": true,
+		"comments": false,
+		"strings": true
+	},
+	"emmet.includeLanguages": {
+		"svelte": "html"
+	},
+	"editor.lineNumbers": "relative"
+}
