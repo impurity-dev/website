@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Boot from '$lib/components/boot/Boot.svelte';
+	import Interactive from '$lib/components/interactive/Interactive.svelte';
 	import Login from '$lib/components/login/Login.svelte';
 	import Terminal from '$lib/components/terminal/Terminal.svelte';
 	import { STATE_KEY, appState } from './state';
@@ -8,12 +9,31 @@
 		if (typeof window === 'undefined') return;
 		sessionStorage.setItem(STATE_KEY, JSON.stringify(value));
 	});
+
+	let mounted = $state(false);
+	let Viewport = $state<any>(null);
+	$effect(() => {
+		(async () => {
+			const mod = await import('$lib/components/viewport/Viewport.svelte');
+			Viewport = mod.default;
+			mounted = true;
+		})();
+	});
 </script>
 
 {#if $appState.status === 'BOOT'}
 	<Boot {appName} />
 {:else if $appState.status === 'LOGIN'}
-	<Login {appName} />
+	<Login />
+{:else if mounted}
+	<Interactive>
+		{#snippet viewport()}
+			<Viewport />
+		{/snippet}
+		{#snippet terminal()}
+			<Terminal {appName} username={$appState.username!} />
+		{/snippet}
+	</Interactive>
 {:else}
-	<Terminal {appName} username={$appState.username!} />
+	<div>loading...</div>
 {/if}

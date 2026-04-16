@@ -1,9 +1,19 @@
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import { sveltekit } from '@sveltejs/kit/vite';
+import devtoolsJson from 'vite-plugin-devtools-json';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()],
+	plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
+	build: {
+		target: 'esnext'
+	},
+	server: {
+		port: 5173
+	},
+	optimizeDeps: {
+		exclude: ['@babylonjs/gui-editor']
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [
@@ -15,7 +25,6 @@ export default defineConfig({
 					exclude: ['src/lib/server/**']
 				}
 			},
-
 			{
 				extends: './vite.config.ts',
 				test: {
