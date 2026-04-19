@@ -5,11 +5,9 @@ import {
 	GlowLayer,
 	HemisphericLight,
 	LinesMesh,
-	Mesh,
 	MeshBuilder,
 	Scene,
 	StandardMaterial,
-	TransformNode,
 	Vector3
 } from '@babylonjs/core';
 
@@ -36,6 +34,19 @@ export class VirtualController {
 		light.intensity = 0.7;
 		const glow = new GlowLayer('glow', this.scene);
 		glow.intensity = 0.8;
+
+		const mesh = MeshBuilder.CreateIcoSphere('glow-object', { radius: 6 }, this.scene);
+		mesh.position.set(0, 5, 0);
+		camera.target = mesh.position;
+		const mat = new StandardMaterial('glow-mat', this.scene);
+		mat.emissiveColor = new Color3(0, 1, 0);
+		mat.diffuseColor = Color3.Black();
+		mat.specularColor = Color3.Black();
+		mat.wireframe = true;
+		mesh.material = mat;
+		this.scene.onBeforeRenderObservable.add(() => {
+			mesh.rotation.y += 0.01;
+		});
 
 		this.createInfiniteGrid();
 	};
