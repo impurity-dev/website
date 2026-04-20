@@ -6,21 +6,29 @@ import {
 	HemisphericLight,
 	LinesMesh,
 	MeshBuilder,
+	Observer,
 	Scene,
 	StandardMaterial,
 	Vector3
 } from '@babylonjs/core';
+import type { EventBus, Events } from '../events/bus';
 
 export class VirtualController {
 	private readonly canvas: HTMLCanvasElement;
 	private readonly scene: Scene;
-	constructor(props: { canvas: HTMLCanvasElement; scene: Scene }) {
-		const { canvas, scene } = props;
+	private readonly bus: EventBus<Events>;
+	private onBeforeRenderObservables: Observer<Scene>[] = [];
+
+	constructor(props: { canvas: HTMLCanvasElement; scene: Scene; bus: EventBus<Events> }) {
+		const { canvas, scene, bus } = props;
 		this.canvas = canvas;
 		this.scene = scene;
+		this.bus = bus;
 	}
 
 	onEnter = () => {
+		this.scene.fogMode = Scene.FOGMODE_EXP;
+		this.scene.fogDensity = 0.015;
 		this.scene.clearColor = new Color4(0, 0, 0, 1);
 		const camera = new ArcRotateCamera(
 			'camera',
@@ -44,16 +52,26 @@ export class VirtualController {
 		mat.specularColor = Color3.Black();
 		mat.wireframe = true;
 		mesh.material = mat;
-		this.scene.onBeforeRenderObservable.add(() => {
+		this.onBeforeRender(() => {
 			mesh.rotation.y += 0.01;
 		});
 
 		this.createInfiniteGrid();
 	};
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onUpdate = (delta: number) => {};
 
-	onExit = () => {};
+	onExit = () => {
+		this.onBeforeRenderObservables.forEach((obs) => {
+			this.scene.onBeforeRenderObservable.remove(obs);
+		});
+	};
+
+	private onBeforeRender = (cb: () => void) => {
+		const obs = this.scene.onBeforeRenderObservable.add(cb);
+		this.onBeforeRenderObservables.push(obs);
+	};
 
 	private createInfiniteGrid = () => {
 		const gridSize = 100;
@@ -69,9 +87,7 @@ export class VirtualController {
 		for (let i = -gridSize; i <= gridSize; i += step) {
 			const line = MeshBuilder.CreateLines(
 				`h-${i}`,
-				{
-					points: [new Vector3(-gridSize, 0, i), new Vector3(gridSize, 0, i)]
-				},
+				{ points: [new Vector3(-gridSize, 0, i), new Vector3(gridSize, 0, i)] },
 				this.scene
 			);
 
@@ -83,9 +99,7 @@ export class VirtualController {
 		for (let i = -gridSize; i <= gridSize; i += step) {
 			const line = MeshBuilder.CreateLines(
 				`v-${i}`,
-				{
-					points: [new Vector3(i, 0, -gridSize), new Vector3(i, 0, gridSize)]
-				},
+				{ points: [new Vector3(i, 0, -gridSize), new Vector3(i, 0, gridSize)] },
 				this.scene
 			);
 

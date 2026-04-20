@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Events } from '../events/bus';
+	import { EventBus } from '../events/bus';
 	import { Manager } from './manager';
 	import { Engine, WebGPUEngine } from '@babylonjs/core';
 
@@ -23,7 +25,8 @@
 				engine.dispose();
 				return;
 			}
-			manager = new Manager(canvas, engine);
+			const bus = new EventBus<Events>();
+			manager = new Manager({ canvas, engine, bus });
 			manager.run();
 		});
 
