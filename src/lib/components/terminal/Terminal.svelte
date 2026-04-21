@@ -6,9 +6,10 @@
 		appName: string;
 		bus: EventBus<Events>;
 	};
-	let { username, appName }: Props = $props();
+	let { username, appName, bus }: Props = $props();
 	let lines = $state<Line[]>([]);
 	let input = $state('');
+	let currentDir = $state('home');
 
 	let id = 0;
 	const terminal: Terminal = {
@@ -33,10 +34,19 @@
 			parse: () => ({ ok: true, args: [] }),
 			run: (a) => terminal.print(a.join(' '))
 		},
+		pwd: {
+			desc: 'print working directory',
+			parse: () => ({ ok: true, args: [] }),
+			run: () => terminal.print(currentDir)
+		},
 		cd: {
 			desc: 'navigate',
-			parse: () => ({ ok: true, args: [] }),
-			run: ([d]) => terminal.print(`go ${d}`)
+			parse: ([d]) => (d ? { ok: true, args: [d] } : { ok: false, error: `invalid destination` }),
+			run: ([next]) => {
+				terminal.print(`go ${next}`);
+				bus.emit('goto', { from: currentDir, to: next });
+				currentDir = next;
+			}
 		}
 	};
 

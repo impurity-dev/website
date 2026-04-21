@@ -13,6 +13,7 @@
 	});
 
 	let mounted = $state(false);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let Viewport = $state<any>(null);
 	$effect(() => {
 		(async () => {

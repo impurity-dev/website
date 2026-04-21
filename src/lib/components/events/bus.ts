@@ -1,16 +1,13 @@
 import { logger } from '$lib/components/core/logging';
 
 export type Events = {
-	'node:hover': { nodeId: string };
-	'node:select': { nodeId: string };
-	'camera:travel': { from: string; to: string };
-	'camera:arrived': { nodeId: string };
+	goto: { from: string; to: string };
 };
 
 export type TypedListener<T, K extends keyof T> = (payload: T[K]) => void;
 
 export class EventBus<T extends Record<string, unknown>> {
-	private listeners: {
+	private readonly listeners: {
 		[K in keyof T]?: Set<TypedListener<T, K>>;
 	} = {};
 
@@ -29,7 +26,7 @@ export class EventBus<T extends Record<string, unknown>> {
 	};
 
 	emit = <K extends keyof T>(event: K, payload: T[K]) => {
-		logger.info(`emitting ${event.toString()} with payload ${payload}`);
+		logger.info(`emitting ${event.toString()} with payload ${JSON.stringify(payload)}`);
 		this.listeners[event]?.forEach((handler) => handler(payload));
 	};
 

@@ -11,19 +11,18 @@ import {
 	StandardMaterial,
 	Vector3
 } from '@babylonjs/core';
-import type { EventBus, Events } from '../events/bus';
+import { logger } from '../core/logging';
 
+export type VirtualControllerProps = { canvas: HTMLCanvasElement; scene: Scene };
 export class VirtualController {
 	private readonly canvas: HTMLCanvasElement;
 	private readonly scene: Scene;
-	private readonly bus: EventBus<Events>;
 	private onBeforeRenderObservables: Observer<Scene>[] = [];
 
-	constructor(props: { canvas: HTMLCanvasElement; scene: Scene; bus: EventBus<Events> }) {
-		const { canvas, scene, bus } = props;
+	constructor(props: VirtualControllerProps) {
+		const { canvas, scene } = props;
 		this.canvas = canvas;
 		this.scene = scene;
-		this.bus = bus;
 	}
 
 	onEnter = () => {
@@ -61,6 +60,10 @@ export class VirtualController {
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onUpdate = (delta: number) => {};
+
+	goTo = (args: { from: string; to: string }) => {
+		logger.info(args);
+	};
 
 	onExit = () => {
 		this.onBeforeRenderObservables.forEach((obs) => {

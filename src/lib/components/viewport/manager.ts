@@ -17,6 +17,7 @@ export class Manager {
 	private readonly token: InspectorToken | undefined;
 	private readonly controller: VirtualController;
 	private readonly bus: EventBus<Events>;
+	private readonly subscriptions: (() => void)[] = [];
 
 	constructor(props: ManagerProps) {
 		const { canvas, engine, bus } = props;
@@ -25,9 +26,11 @@ export class Manager {
 		this.bus = bus;
 		this.scene = new Scene(this.engine);
 		if (PUBLIC_ATTACH_INSPECTOR === 'true') this.token = ShowInspector(this.scene);
-		const args = { canvas: this.canvas, scene: this.scene, bus: this.bus };
+		const args = { canvas: this.canvas, scene: this.scene };
 		this.controller = new VirtualController(args);
 		this.controller.onEnter();
+		const unsub = this.bus.on('goto', (args) => this.controller.goTo(args));
+		this.subscriptions.push(unsub);
 	}
 
 	resize = () => this.engine.resize();

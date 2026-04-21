@@ -3,7 +3,10 @@
 	import { EventBus } from '../events/bus';
 	import { Manager } from './manager';
 	import { Engine, WebGPUEngine } from '@babylonjs/core';
-
+	type Props = {
+		bus: EventBus<Events>;
+	};
+	let { bus }: Props = $props();
 	let canvas = $state<HTMLCanvasElement>(null!);
 	let manager = $state<Manager | undefined>(undefined);
 
@@ -25,7 +28,6 @@
 				engine.dispose();
 				return;
 			}
-			const bus = new EventBus<Events>();
 			manager = new Manager({ canvas, engine, bus });
 			manager.run();
 		});
