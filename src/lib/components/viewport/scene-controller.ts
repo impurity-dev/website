@@ -13,13 +13,13 @@ import {
 } from '@babylonjs/core';
 import { logger } from '../core/logging';
 
-export type VirtualControllerProps = { canvas: HTMLCanvasElement; scene: Scene };
-export class VirtualController {
+export type SceneControllerProps = { canvas: HTMLCanvasElement; scene: Scene };
+export class SceneController {
 	private readonly canvas: HTMLCanvasElement;
 	private readonly scene: Scene;
 	private onBeforeRenderObservables: Observer<Scene>[] = [];
 
-	constructor(props: VirtualControllerProps) {
+	constructor(props: SceneControllerProps) {
 		const { canvas, scene } = props;
 		this.canvas = canvas;
 		this.scene = scene;

@@ -1,14 +1,14 @@
 <script lang="ts">
 	import type { Events } from '../events/bus';
 	import { EventBus } from '../events/bus';
-	import { Manager } from './manager';
+	import { ViewportManager } from './viewport-manager';
 	import { Engine, WebGPUEngine } from '@babylonjs/core';
 	type Props = {
 		bus: EventBus<Events>;
 	};
 	let { bus }: Props = $props();
 	let canvas = $state<HTMLCanvasElement>(null!);
-	let manager = $state<Manager | undefined>(undefined);
+	let manager = $state<ViewportManager | undefined>(undefined);
 
 	const createEngine = async () => {
 		if (navigator.gpu) {
@@ -28,7 +28,7 @@
 				engine.dispose();
 				return;
 			}
-			manager = new Manager({ canvas, engine, bus });
+			manager = new ViewportManager({ canvas, engine, bus });
 			manager.run();
 		});
 
