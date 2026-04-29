@@ -1,8 +1,8 @@
 import { AbstractEngine, KeyboardEventTypes, KeyboardInfo, Observer, Scene } from '@babylonjs/core';
 import { PUBLIC_ATTACH_INSPECTOR } from '$env/static/public';
 import { ShowInspector, type InspectorToken } from '@babylonjs/inspector';
-import { SceneController } from './scene-controller.ts';
-import type { EventBus, Events } from '../events/bus';
+import { SceneController } from './controller.ts';
+import type { EventBus, Events } from '../events/bus.ts';
 
 export type ViewportManagerProps = {
 	canvas: HTMLCanvasElement;

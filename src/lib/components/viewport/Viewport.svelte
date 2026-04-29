@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Events } from '../events/bus';
 	import { EventBus } from '../events/bus';
-	import { ViewportManager } from './viewport-manager';
+	import { ViewportManager } from './manager';
 	import { Engine, WebGPUEngine } from '@babylonjs/core';
 	type Props = {
 		bus: EventBus<Events>;

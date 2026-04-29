@@ -21,16 +21,16 @@
 	}
 
 	/* 🔥 optional glow ambience */
-	.app::before {
+	/* .app::before {
 		content: '';
 		position: fixed;
 		inset: 0;
 		background: radial-gradient(circle at top, rgba(34, 197, 94, 0.08), transparent 60%);
 		pointer-events: none;
-	}
+	} */
 
 	/* 🔥 optional scanlines */
-	.app::after {
+	/* .app::after {
 		content: '';
 		position: fixed;
 		inset: 0;
@@ -42,5 +42,5 @@
 			transparent 4px
 		);
 		pointer-events: none;
-	}
+	} */
 </style>
