@@ -1,8 +1,9 @@
 <script lang="ts">
 	import type { Events } from '../events/bus';
 	import { EventBus } from '../events/bus';
-	import { ViewportManager } from './manager';
-	import { Engine, WebGPUEngine } from '@babylonjs/core';
+	import { EntryController } from './controllers/entry';
+	import { Engine, Scene, WebGPUEngine } from '@babylonjs/core';
+	import { ViewportManager } from './viewport-manager';
 	type Props = {
 		bus: EventBus<Events>;
 	};
@@ -28,7 +29,9 @@
 				engine.dispose();
 				return;
 			}
-			manager = new ViewportManager({ canvas, engine, bus });
+			const scene = new Scene(engine);
+			const controller = new EntryController({ canvas, scene });
+			manager = new ViewportManager({ canvas, engine, bus, scene, controller });
 			manager.run();
 		});
 
