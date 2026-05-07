@@ -1,110 +1,77 @@
-// EnvironmentManager.ts
 import {
-	Scene,
-	HemisphericLight,
-	PointLight,
-	Vector3,
 	Color3,
+	Color4,
+	DirectionalLight,
+	HemisphericLight,
 	MeshBuilder,
+	Scene,
 	StandardMaterial,
-	PointsCloudSystem,
-	Mesh
+	Vector3
 } from '@babylonjs/core';
+import type { CameraController } from '../cameras/controller';
+import { GroundManager } from './ground';
 
-export type EnvironmentMode = 'core' | 'projects' | 'skills' | 'experience';
+export type EnvironmentManagerProps = {
+	scene: Scene;
+	camera: CameraController;
+};
 
 export class EnvironmentManager {
-	private scene: Scene;
+	private readonly scene: Scene;
+	private readonly cameraController: CameraController;
+	private readonly groundManager: GroundManager;
 
-	private coreMesh: Mesh | undefined;
-	private voidSphere: Mesh | undefined;
-	private particleMesh: Mesh | undefined;
-
-	private pointLight: PointLight | undefined;
-
-	public mode: EnvironmentMode = 'core';
-
-	constructor(scene: Scene) {
+	constructor(props: EnvironmentManagerProps) {
+		const { scene, camera } = props;
 		this.scene = scene;
+		this.scene.clearColor = new Color4(0, 0, 0, 0);
+		this.scene.fogMode = Scene.FOGMODE_EXP2;
+		this.scene.fogDensity = 0.05;
+		this.scene.fogColor = new Color3(0.01, 0.02, 0.05);
+		this.cameraController = camera;
+		this.groundManager = new GroundManager({ scene, size: 40, spacing: 1.2 });
 	}
 
-	async init() {
-		this.createLighting();
-		this.createVoid();
+	async init(): Promise<void> {
+		this.createLights();
+		// this.createHolograms();
 		this.createCore();
-		await this.createParticles();
-	}
-
-	private createLighting() {
-		new HemisphericLight('hemi', new Vector3(0, 1, 0), this.scene);
-
-		this.pointLight = new PointLight('point', new Vector3(0, 2, 0), this.scene);
-
-		this.pointLight.intensity = 15;
-	}
-
-	private createVoid() {
-		this.voidSphere = MeshBuilder.CreateSphere('void', { diameter: 100 }, this.scene);
-
-		const mat = new StandardMaterial('voidMat', this.scene);
-		mat.backFaceCulling = false;
-		mat.emissiveColor = new Color3(0.02, 0.02, 0.05);
-
-		this.voidSphere.material = mat;
-	}
-
-	private createCore() {
-		this.coreMesh = MeshBuilder.CreateBox('core', { size: 2 }, this.scene);
-
-		this.coreMesh.position.y = 1;
-
-		const mat = new StandardMaterial('coreMat', this.scene);
-		mat.emissiveColor = new Color3(0.1, 0.6, 1.0);
-
-		this.coreMesh.material = mat;
-	}
-
-	private async createParticles() {
-		const pcs = new PointsCloudSystem('pcs', 1, this.scene);
-
-		pcs.addPoints(2000, () => {
-			return new Vector3(
-				(Math.random() - 0.5) * 50,
-				Math.random() * 10,
-				(Math.random() - 0.5) * 50
-			);
-		});
-
-		this.particleMesh = await pcs.buildMeshAsync();
-	}
-
-	// 🔥 KEY: future transitions plug into here
-	setMode(mode: EnvironmentMode) {
-		this.mode = mode;
 	}
 
 	update(dt: number) {
-		// core idle animation
-		if (this.coreMesh) {
-			this.coreMesh.rotation.y += dt * 0.5;
-			this.coreMesh.position.y = 1 + Math.sin(performance.now() * 0.001) * 0.1;
-		}
+		this.groundManager.update(dt);
+	}
 
-		// subtle differences per mode (expand later)
-		if (this.pointLight) {
-			switch (this.mode) {
-				case 'projects':
-					this.pointLight.diffuse = new Color3(0.8, 0.2, 1.0);
-					break;
-				case 'skills':
-					this.pointLight.diffuse = new Color3(0.2, 1.0, 0.8);
-					break;
-				case 'experience':
-					this.pointLight.diffuse = new Color3(1.0, 0.6, 0.2);
-					break;
-				default:
-					this.pointLight.diffuse = new Color3(0.3, 0.6, 1.0);
-			}
+	private createLights = () => {
+		const hemi = new HemisphericLight('hemi', new Vector3(0, 1, 0), this.scene);
+		hemi.intensity = 0.6;
+		hemi.groundColor = new Color3(0.05, 0.2, 0.05);
+		const dir = new DirectionalLight('dir', new Vector3(-0.3, -1, 0.2), this.scene);
+		dir.intensity = 0.8;
+	};
+
+	private createCore = () => {
+		const core = MeshBuilder.CreateSphere('core', { diameter: 3 }, this.scene);
+		core.position.y = 11;
+		core.position.x = 10;
+
+		const mat = new StandardMaterial('coreMat', this.scene);
+		mat.emissiveColor = new Color3(0.2, 1, 0.7);
+
+		core.material = mat;
+	};
+
+	private createHolograms() {
+		for (let i = 0; i < 40; i++) {
+			const box = MeshBuilder.CreateBox(
+				'holo',
+				{ size: 1, height: Math.random() * 10 + 4 },
+				this.scene
+			);
+
+			box.position.x = (Math.random() - 0.5) * 80;
+			box.position.z = (Math.random() - 0.5) * 80;
+			box.position.y = box.scaling.y / 2;
 		}
 	}
 }

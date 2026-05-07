@@ -3,6 +3,7 @@ import { EntryController } from './controllers/entry.ts';
 import type { EventBus, Events } from '../events/bus.ts';
 import { DisposableManager } from './shared/disposable.js';
 import { Inspector } from './shared/inspector.js';
+import type { ShaderManager } from './shaders/manager.ts';
 
 export type ViewportManagerProps = {
 	canvas: HTMLCanvasElement;
@@ -10,6 +11,7 @@ export type ViewportManagerProps = {
 	engine: AbstractEngine;
 	bus: EventBus<Events>;
 	controller: EntryController;
+	shaders: ShaderManager;
 };
 
 export class ViewportManager {
@@ -20,15 +22,17 @@ export class ViewportManager {
 	private readonly bus: EventBus<Events>;
 	private readonly disposable: DisposableManager;
 	private readonly inspector: Inspector;
+	private readonly shaders: ShaderManager;
 
 	constructor(props: ViewportManagerProps) {
-		const { canvas, engine, scene, bus, controller } = props;
+		const { canvas, engine, scene, bus, controller, shaders } = props;
 		this.canvas = canvas;
 		this.engine = engine;
 		this.bus = bus;
 		this.disposable = new DisposableManager();
 		this.scene = scene;
 		this.controller = controller;
+		this.shaders = shaders;
 		this.inspector = new Inspector({ scene });
 		this.inspector.attach();
 		const unsub = this.bus.on('goto', (args) => this.controller.goTo(args));
@@ -38,6 +42,7 @@ export class ViewportManager {
 	resize = () => this.engine.resize();
 
 	run = async () => {
+		await this.shaders.load();
 		await this.controller.onEnter();
 		this.engine.runRenderLoop(() => {
 			if (!this.controller) return;

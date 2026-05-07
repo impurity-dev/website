@@ -3,7 +3,8 @@
 	import { EventBus } from '../events/bus';
 	import { EntryController } from './controllers/entry';
 	import { Engine, Scene, WebGPUEngine } from '@babylonjs/core';
-	import { ViewportManager } from './viewport-manager';
+	import { ViewportManager } from './manager';
+	import { ShaderManager } from './shaders/manager';
 	type Props = {
 		bus: EventBus<Events>;
 	};
@@ -12,7 +13,7 @@
 	let manager = $state<ViewportManager | undefined>(undefined);
 
 	const createEngine = async () => {
-		if (navigator.gpu) {
+		if (navigator.gpu && (await navigator.gpu.requestAdapter())) {
 			const engine = new WebGPUEngine(canvas, { antialias: true, adaptToDeviceRatio: true });
 			await engine.initAsync();
 			return engine;
@@ -30,8 +31,9 @@
 				return;
 			}
 			const scene = new Scene(engine);
+			const shaders = new ShaderManager();
 			const controller = new EntryController({ canvas, scene });
-			manager = new ViewportManager({ canvas, engine, bus, scene, controller });
+			manager = new ViewportManager({ canvas, engine, bus, scene, controller, shaders });
 			manager.run();
 		});
 

@@ -1,4 +1,3 @@
-import { Color4 } from '@babylonjs/core';
 import { logger } from '../../core/logging';
 import { Controller } from './controller';
 import { CameraController } from '../cameras/controller';
@@ -10,10 +9,9 @@ export class EntryController extends Controller {
 
 	onEnter = async () => {
 		const { scene, canvas } = this;
-		scene.clearColor = new Color4(0.01, 0.01, 0.02, 1);
 		this.camera = new CameraController(scene);
 		this.camera.attach(canvas);
-		this.environment = new EnvironmentManager(scene);
+		this.environment = new EnvironmentManager({ scene, camera: this.camera });
 		await this.environment.init();
 	};
 
