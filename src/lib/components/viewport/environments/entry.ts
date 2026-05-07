@@ -10,6 +10,7 @@ import {
 } from '@babylonjs/core';
 import type { CameraController } from '../cameras/controller';
 import { GroundManager } from './ground';
+import { CoreManager } from './core';
 
 export type EnvironmentManagerProps = {
 	scene: Scene;
@@ -20,6 +21,7 @@ export class EnvironmentManager {
 	private readonly scene: Scene;
 	private readonly cameraController: CameraController;
 	private readonly groundManager: GroundManager;
+	private readonly coreManager: CoreManager;
 
 	constructor(props: EnvironmentManagerProps) {
 		const { scene, camera } = props;
@@ -30,16 +32,16 @@ export class EnvironmentManager {
 		this.scene.fogColor = new Color3(0.01, 0.02, 0.05);
 		this.cameraController = camera;
 		this.groundManager = new GroundManager({ scene, size: 40, spacing: 1.2 });
+		this.coreManager = new CoreManager({ scene, shardCount: 18, position: new Vector3(10, 10, 0) });
 	}
 
 	async init(): Promise<void> {
 		this.createLights();
-		// this.createHolograms();
-		this.createCore();
 	}
 
 	update(dt: number) {
 		this.groundManager.update(dt);
+		this.coreManager.update(dt);
 	}
 
 	private createLights = () => {
