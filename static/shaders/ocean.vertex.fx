@@ -3,51 +3,70 @@ precision highp float;
 attribute vec3 position;
 attribute vec3 normal;
 
+attribute vec4 world0;
+attribute vec4 world1;
+attribute vec4 world2;
+attribute vec4 world3;
+
 uniform mat4 worldViewProjection;
-
 uniform float time;
-uniform float waveStrength;
-uniform float waveScale;
 
-varying vec3 vPosition;
 varying vec3 vNormal;
-varying float vHeight;
+varying vec3 vWorldPos;
+varying float vWave;
 
-//
-// cheap wave function (works great for voxel grids)
-//
-float wave(vec3 p) {
-    return sin(p.x * waveScale + time) * 
-           cos(p.z * waveScale + time * 0.8);
+float wave(vec2 p) {
+    return
+        sin(p.x * 0.15 + time) *
+        cos(p.y * 0.15 + time * 0.7);
 }
 
 void main() {
 
-    vec3 pos = position;
+    //
+    // thin instance matrix
+    //
 
-    // wave displacement (Y axis)
-    float h = wave(pos);
-    pos.y += h * waveStrength;
+    mat4 finalWorld = mat4(
+        world0,
+        world1,
+        world2,
+        world3
+    );
+    vec4 localPos = vec4(position, 1.0);
+    vec4 worldPos = finalWorld * localPos;
 
-    vHeight = pos.y;
+    //
+    // wave displacement
+    //
 
-    vPosition = pos;
+    float h = wave(worldPos.xz);
 
-    // fake normal via small offsets (voxel-safe)
-    float eps = 0.1;
+    worldPos.y += h * 2.0;
 
-    float hL = wave(pos + vec3(-eps,0,0));
-    float hR = wave(pos + vec3(eps,0,0));
-    float hD = wave(pos + vec3(0,0,-eps));
-    float hU = wave(pos + vec3(0,0,eps));
+    vWave = h;
 
-    vec3 n = normalize(vec3(
+    //
+    // fake normals
+    //
+
+    float eps = 0.25;
+
+    float hL = wave(worldPos.xz + vec2(-eps, 0.0));
+    float hR = wave(worldPos.xz + vec2(eps, 0.0));
+
+    float hD = wave(worldPos.xz + vec2(0.0, -eps));
+    float hU = wave(worldPos.xz + vec2(0.0, eps));
+
+    vec3 N = normalize(vec3(
         hL - hR,
         2.0,
         hD - hU
     ));
 
-    vNormal = n;
+    vNormal = N;
+    vWorldPos = worldPos.xyz;
 
-    gl_Position = worldViewProjection * vec4(pos, 1.0);
+    gl_Position =
+        worldViewProjection * worldPos;
 }

@@ -1,54 +1,80 @@
 precision highp float;
 
-varying vec3 vPosition;
 varying vec3 vNormal;
-varying float vHeight;
+varying vec3 vWorldPos;
+varying float vWave;
 
-uniform vec3 lightDirection;
 uniform vec3 cameraPosition;
-
-uniform vec3 waterColor;
-uniform vec3 deepColor;
 
 void main() {
 
     vec3 N = normalize(vNormal);
-    vec3 L = normalize(-lightDirection);
-    vec3 V = normalize(cameraPosition - vPosition);
 
-    // -------------------------
-    // Diffuse lighting
-    // -------------------------
-    float NdotL = max(dot(N, L), 0.0);
-    float diffuse = NdotL * 0.6 + 0.4;
+    //
+    // light direction
+    //
 
-    // -------------------------
-    // Fresnel (CRITICAL AAA LOOK)
-    // -------------------------
-    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 4.0);
+    vec3 L =
+        normalize(vec3(-0.4, 1.0, -0.2));
 
-    // -------------------------
-    // Specular highlight
-    // -------------------------
+    float diffuse =
+        max(dot(N, L), 0.0);
+
+    //
+    // view direction
+    //
+
+    vec3 V =
+        normalize(cameraPosition - vWorldPos);
+
+    //
+    // fresnel
+    //
+
+    float fresnel =
+        pow(1.0 - max(dot(N, V), 0.0), 5.0);
+
+    //
+    // specular
+    //
+
     vec3 H = normalize(L + V);
-    float spec = pow(max(dot(N, H), 0.0), 64.0);
 
-    // -------------------------
-    // Depth coloring (fake)
-    // -------------------------
-    float depthFactor = smoothstep(-1.0, 1.0, vHeight);
-    vec3 baseColor = mix(deepColor, waterColor, depthFactor);
+    float spec =
+        pow(max(dot(N, H), 0.0), 64.0);
 
-    // -------------------------
-    // Final color composition
-    // -------------------------
+    //
+    // water colors
+    //
+
+    vec3 deep =
+        vec3(0.0, 0.04, 0.08);
+
+    vec3 shallow =
+        vec3(0.0, 0.9, 0.5);
+
+    float depth =
+        smoothstep(-1.0, 1.0, vWave);
+
+    vec3 base =
+        mix(deep, shallow, depth);
+
+    //
+    // foam
+    //
+
+    float foam =
+        smoothstep(0.7, 1.0, vWave);
+
+    //
+    // final color
+    //
+
     vec3 color =
-        baseColor * diffuse +
-        vec3(1.0) * spec * 1.2 +
-        baseColor * fresnel * 0.8;
-
-    // subtle foam on peaks
-    color += step(0.5, vHeight) * 0.1;
+        base * (diffuse + 0.2) +
+        vec3(1.0) * spec * 1.5 +
+        vec3(0.6, 1.0, 0.8) * fresnel * 0.6 +
+        vec3(1.0) * foam * 0.4;
 
     gl_FragColor = vec4(color, 1.0);
 }
