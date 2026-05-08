@@ -23,7 +23,7 @@ export class GroundManager {
 		this.disposable = new DisposableManager();
 		this.base = MeshBuilder.CreateBox('voxel', { size: 1 }, this.scene);
 		this.shader = new ShaderMaterial(
-			'voxelMaterial',
+			'ocean',
 			scene,
 			{
 				vertex: 'ocean',
@@ -31,10 +31,11 @@ export class GroundManager {
 			},
 			{
 				attributes: ['position', 'normal', 'world0', 'world1', 'world2', 'world3'],
-				uniforms: ['worldViewProjection', 'time', 'cameraPosition']
+				uniforms: ['worldViewProjection', 'time']
 			}
 		);
 		this.base.material = this.shader;
+		this.shader.backFaceCulling = true;
 		const matrices: number[] = [];
 		for (let x = -this.size; x < this.size; x++) {
 			for (let z = -this.size; z < this.size; z++) {
