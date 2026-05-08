@@ -23,50 +23,37 @@ float wave(vec2 p) {
 
 void main() {
 
-    //
-    // thin instance matrix
-    //
-
     mat4 finalWorld = mat4(
         world0,
         world1,
         world2,
         world3
     );
-    vec4 localPos = vec4(position, 1.0);
-    vec4 worldPos = finalWorld * localPos;
 
     //
-    // wave displacement
+    // STEP 1: get INSTANCE CENTER (NOT vertex)
     //
+    vec4 center = finalWorld * vec4(0.0, 0.0, 0.0, 1.0);
 
-    float h = wave(worldPos.xz);
+    float h = wave(center.xz);
 
-    worldPos.y += h * 2.0;
+    //
+    // STEP 2: apply rigid vertical offset ONLY to instance center
+    //
+    center.y += h * 2.0;
 
     vWave = h;
 
     //
-    // fake normals
+    // STEP 3: rebuild final position
+    // cube geometry stays intact here
     //
+    vec4 finalPos =
+        center + (finalWorld * vec4(position, 0.0));
 
-    float eps = 0.25;
-
-    float hL = wave(worldPos.xz + vec2(-eps, 0.0));
-    float hR = wave(worldPos.xz + vec2(eps, 0.0));
-
-    float hD = wave(worldPos.xz + vec2(0.0, -eps));
-    float hU = wave(worldPos.xz + vec2(0.0, eps));
-
-    vec3 N = normalize(vec3(
-        hL - hR,
-        2.0,
-        hD - hU
-    ));
-
-    vNormal = N;
-    vWorldPos = worldPos.xyz;
+    vWorldPos = finalPos.xyz;
+    vNormal = normal;
 
     gl_Position =
-        worldViewProjection * worldPos;
+        worldViewProjection * finalPos;
 }
