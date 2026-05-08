@@ -1,102 +1,145 @@
 import {
 	Color3,
 	GlowLayer,
+	Matrix,
 	Mesh,
 	MeshBuilder,
 	StandardMaterial,
 	TransformNode,
 	Vector3,
-	type Scene
+	Scene,
+	Quaternion
 } from '@babylonjs/core';
-import { DisposableManager } from '../shared/disposable';
 
-export type CoreManagerProps = {
-	scene: Scene;
-	shardCount: number;
-	position: Vector3;
-};
-type Shard = {
-	mesh: Mesh;
-	angle: number;
-	radius: number;
-	speed: number;
-	heightOffset: number;
-};
 export class CoreManager {
-	private readonly scene: Scene;
-	private readonly disposable: DisposableManager;
+	private root: TransformNode;
+	private voxelMesh: Mesh;
+	private matrices: Float32Array;
+	private voxels: any[] = [];
 
-	private readonly root: TransformNode;
-	private readonly core: Mesh;
-	private readonly shards: Shard[] = [];
-	private readonly shardCount: number;
-	private readonly position: Vector3;
+	private time = 0;
 
-	constructor(props: CoreManagerProps) {
-		const { scene, shardCount, position } = props;
-		this.scene = scene;
-		this.shardCount = shardCount;
-		this.position = position;
-		this.disposable = new DisposableManager();
+	private tmpPos = new Vector3();
+	private tmpScale = new Vector3();
+	private tmpQuat = new Quaternion();
 
-		const glow = new GlowLayer('glow', scene);
-		glow.intensity = 0.9;
+	constructor({ scene, position, id }: { scene: Scene; position: Vector3; id: string }) {
+		this.root = new TransformNode(id, scene);
+		this.root.position.copyFrom(position);
 
-		// ===== CORE =====
-		this.core = MeshBuilder.CreateSphere('core', { segments: 64, diameter: 2 }, scene);
+		// 🔥 glow is optional — don't rely on it for visibility
+		new GlowLayer('glow', scene).intensity = 0.2;
 
-		const coreMat = new StandardMaterial('coreMat', scene);
-		coreMat.emissiveColor = new Color3(0.1, 1.0, 0.4); // toxic green core
-		coreMat.diffuseColor = new Color3(0, 0, 0);
-		this.core.material = coreMat;
+		// =========================
+		// VOXEL SOURCE
+		// =========================
 
-		// Floating anchor
-		this.root = new TransformNode('coreRoot', scene);
-		this.root.position = position;
-		this.core.parent = this.root;
+		this.voxelMesh = MeshBuilder.CreateBox(
+			'voxel',
+			{ size: 1 }, // 🔥 bigger = visible immediately
+			scene
+		);
 
-		// ===== ORBITING SHARDS =====
+		this.voxelMesh.parent = this.root;
 
-		for (let i = 0; i < this.shardCount; i++) {
-			const shard = MeshBuilder.CreateBox('shard' + i, { size: 0.15 }, scene);
+		const mat = new StandardMaterial('m', scene);
 
-			const mat = new StandardMaterial('m' + i, scene);
-			mat.emissiveColor = new Color3(0.0, 0.8, 0.3);
-			mat.diffuseColor = new Color3(0, 0, 0);
-			shard.material = mat;
+		mat.emissiveColor = new Color3(0.08, 0.8, 0.25); // 🔥 MUCH stronger
+		mat.diffuseColor = new Color3(0.01, 0.01, 0.01);
+		mat.specularColor = Color3.Black();
 
-			const angle = (i / this.shardCount) * Math.PI * 2;
-			const radius = 2.5;
+		this.voxelMesh.material = mat;
 
-			this.shards.push({
-				mesh: shard,
-				angle,
-				radius,
-				speed: 0.5 + Math.random() * 0.8,
-				heightOffset: (Math.random() - 0.5) * 2
-			});
+		// =========================
+		// BUILD VOXELS (ENSURE DENSITY)
+		// =========================
+
+		const radius = 2.2;
+		const spacing = 0.28;
+
+		for (let x = -radius; x <= radius; x += spacing) {
+			for (let y = -radius; y <= radius; y += spacing) {
+				for (let z = -radius; z <= radius; z += spacing) {
+					const d = Math.sqrt(x * x + y * y + z * z);
+
+					if (d > radius) continue;
+
+					// 🔥 less aggressive culling (you were deleting visibility)
+					if (Math.random() > 0.85) continue;
+
+					this.voxels.push({
+						base: new Vector3(x, y, z),
+						scale: 0.9 + Math.random() * 0.3,
+						offset: Math.random() * 100
+					});
+				}
+			}
 		}
+
+		this.matrices = new Float32Array(this.voxels.length * 16);
+
+		this.voxelMesh.thinInstanceSetBuffer('matrix', this.matrices, 16, true);
+
+		// 🔥 CRITICAL: prevents invisible culling issues
+		this.voxelMesh.refreshBoundingInfo(true);
 	}
 
-	update = (dt: number) => {
-		const t = performance.now() * 0.001;
-		// this.root.position.y = Math.sin(t * 1.2) * 0.03 + this.position.y;
+	update(dt: number) {
+		this.time += dt;
 
-		// // subtle rotation
-		// this.core.rotation.y += dt * 0.5;
-		// this.core.rotation.x += dt * 0.2;
+		const m = new Matrix();
 
-		// // orbiting shards
-		// for (const s of this.shards) {
-		// 	s.angle += dt * s.speed;
+		for (let i = 0; i < this.voxels.length; i++) {
+			const v = this.voxels[i];
+			const p = v.base;
 
-		// 	const x = Math.cos(s.angle) * s.radius;
-		// 	const z = Math.sin(s.angle) * s.radius;
-		// 	const y = Math.sin(t * 2 + s.angle * 2) * 0.5 + s.heightOffset;
+			const dist = p.length();
 
-		// 	s.mesh.position.set(x + this.position.x, y + this.position.y, z);
-		// 	s.mesh.rotation.x += dt * 2;
-		// 	s.mesh.rotation.y += dt * 1.5;
-		// }
-	};
+			// =====================
+			// CORE SPIN FIELD
+			// =====================
+
+			const angle = this.time * 0.4 + dist * 0.8;
+
+			const c = Math.cos(angle);
+			const s = Math.sin(angle);
+
+			const rx = p.x * c - p.z * s;
+			const rz = p.x * s + p.z * c;
+
+			// =====================
+			// BREATHING
+			// =====================
+
+			const pulse = 1 + Math.sin(this.time * 2 + v.offset) * 0.1;
+
+			// =====================
+			// IMPORTANT FIX: keep structure centered
+			// =====================
+
+			this.tmpPos.set(rx * pulse, p.y * pulse, rz * pulse);
+
+			// subtle float
+			this.tmpPos.y += Math.sin(this.time + v.offset) * 0.05;
+
+			// =====================
+			// ROTATION
+			// =====================
+
+			Quaternion.FromEulerAnglesToRef(this.time * 0.2, this.time * 0.3 + v.offset, 0, this.tmpQuat);
+
+			// =====================
+			// SCALE
+			// =====================
+
+			const sc = v.scale * (1 + Math.sin(this.time + v.offset) * 0.05);
+			this.tmpScale.set(sc, sc, sc);
+
+			Matrix.ComposeToRef(this.tmpScale, this.tmpQuat, this.tmpPos, m);
+
+			m.copyToArray(this.matrices, i * 16);
+		}
+
+		this.voxelMesh.thinInstanceBufferUpdated('matrix');
+	}
 }

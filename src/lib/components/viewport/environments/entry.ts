@@ -5,12 +5,12 @@ import {
 	HemisphericLight,
 	MeshBuilder,
 	Scene,
-	StandardMaterial,
 	Vector3
 } from '@babylonjs/core';
 import type { CameraController } from '../cameras/controller';
 import { GroundManager } from './ground';
 import { CoreManager } from './core';
+import { SkyMaterial } from '@babylonjs/materials/sky';
 
 export type EnvironmentManagerProps = {
 	scene: Scene;
@@ -32,7 +32,8 @@ export class EnvironmentManager {
 		this.scene.fogColor = new Color3(0.01, 0.02, 0.05);
 		this.cameraController = camera;
 		this.groundManager = new GroundManager({ scene, size: 40, spacing: 1.2 });
-		this.coreManager = new CoreManager({ scene, shardCount: 18, position: new Vector3(10, 10, 0) });
+		// this.coreManager = new CoreManager({ scene, id: 'core', position: new Vector3(10, 10, 0) });
+		this.createSky(scene);
 	}
 
 	async init(): Promise<void> {
@@ -41,7 +42,7 @@ export class EnvironmentManager {
 
 	update(dt: number) {
 		this.groundManager.update(dt);
-		this.coreManager.update(dt);
+		// this.coreManager.update(dt);
 	}
 
 	private createLights = () => {
@@ -52,28 +53,23 @@ export class EnvironmentManager {
 		dir.intensity = 0.8;
 	};
 
-	private createCore = () => {
-		const core = MeshBuilder.CreateSphere('core', { diameter: 3 }, this.scene);
-		core.position.y = 11;
-		core.position.x = 10;
+	private createSky(scene: Scene) {
+		const skybox = MeshBuilder.CreateBox('skyBox', { size: 1000 }, scene);
 
-		const mat = new StandardMaterial('coreMat', this.scene);
-		mat.emissiveColor = new Color3(0.2, 1, 0.7);
+		const skyMaterial = new SkyMaterial('skyMaterial', scene);
+		skyMaterial.backFaceCulling = false;
 
-		core.material = mat;
-	};
+		// IMPORTANT: this is the main control now
+		skyMaterial.useSunPosition = true;
+		skyMaterial.sunPosition = new Vector3(0, 100, 0);
 
-	private createHolograms() {
-		for (let i = 0; i < 40; i++) {
-			const box = MeshBuilder.CreateBox(
-				'holo',
-				{ size: 1, height: Math.random() * 10 + 4 },
-				this.scene
-			);
+		// tuning that still exists
+		skyMaterial.turbidity = 8;
+		skyMaterial.luminance = 1;
 
-			box.position.x = (Math.random() - 0.5) * 80;
-			box.position.z = (Math.random() - 0.5) * 80;
-			box.position.y = box.scaling.y / 2;
-		}
+		skybox.material = skyMaterial;
+		skybox.infiniteDistance = true;
+
+		return skyMaterial;
 	}
 }

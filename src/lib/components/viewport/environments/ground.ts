@@ -1,5 +1,6 @@
 import { Matrix, Mesh, MeshBuilder, Quaternion, Vector3, type Scene } from '@babylonjs/core';
 import { DisposableManager } from '../shared/disposable';
+import { createVoxelOceanShader } from '../shaders/factory';
 
 export type EnvironmentManagerProps = {
 	scene: Scene;

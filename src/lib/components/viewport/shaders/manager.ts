@@ -1,9 +1,9 @@
 import { Effect } from '@babylonjs/core';
 
-export type Shader = 'grid';
+export type Shader = 'grid' | 'ocean';
 export type ShaderEntry = { loaded: boolean };
 export class ShaderManager {
-	private readonly shaders: Shader[] = ['grid'];
+	private readonly shaders: Shader[] = ['grid', 'ocean'];
 
 	load = async () => await Promise.all(this.shaders.map(this.loadShader));
 
