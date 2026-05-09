@@ -1,13 +1,13 @@
 import { Matrix, Mesh, MeshBuilder, ShaderMaterial, Vector3, type Scene } from '@babylonjs/core';
 import { DisposableManager } from '../shared/disposable';
 
-export type EnvironmentManagerProps = {
+export type MonolithManagerProps = {
 	scene: Scene;
 	size: number;
 	spacing: number;
 };
 
-export class GroundManager {
+export class MonolithManager {
 	private readonly scene: Scene;
 	private readonly disposable: DisposableManager;
 	private readonly base: Mesh;
@@ -16,18 +16,18 @@ export class GroundManager {
 	private readonly shader: ShaderMaterial;
 	private time: number = 0;
 
-	constructor({ scene, size, spacing }: EnvironmentManagerProps) {
+	constructor({ scene, size, spacing }: MonolithManagerProps) {
 		this.scene = scene;
 		this.spacing = spacing;
 		this.size = size;
 		this.disposable = new DisposableManager();
 		this.base = MeshBuilder.CreateBox('voxel', { size: 1 }, this.scene);
 		this.shader = new ShaderMaterial(
-			'ocean',
+			'monolith',
 			scene,
 			{
-				vertex: 'ocean',
-				fragment: 'ocean'
+				vertex: 'monolith',
+				fragment: 'monolith'
 			},
 			{
 				attributes: ['position', 'normal', 'world0', 'world1', 'world2', 'world3'],
@@ -53,11 +53,6 @@ export class GroundManager {
 	update = (dt: number) => {
 		this.time += dt;
 		this.shader.setFloat('time', this.time);
-		this.shader.setVector3(
-			'vFogInfos',
-			new Vector3(this.scene.fogMode, this.scene.fogDensity, 0.0)
-		);
-		this.shader.setColor3('vFogColor', this.scene.fogColor);
 	};
 
 	dispose = () => this.disposable.dispose();

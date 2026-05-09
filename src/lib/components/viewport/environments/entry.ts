@@ -28,7 +28,7 @@ export class EnvironmentManager {
 		this.scene = scene;
 		this.scene.clearColor = new Color4(0, 0, 0, 0);
 		this.scene.fogMode = Scene.FOGMODE_EXP2;
-		this.scene.fogDensity = 0.05;
+		this.scene.fogDensity = 0.02;
 		this.scene.fogColor = new Color3(0.01, 0.02, 0.05);
 		this.cameraController = camera;
 		this.groundManager = new GroundManager({ scene, size: 100, spacing: 1.2 });
