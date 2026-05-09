@@ -9,6 +9,9 @@ varying float fFogDistance;
 uniform float time;
 uniform vec3 vFogInfos;
 uniform vec3 vFogColor;
+uniform vec3 glowDeep;
+uniform vec3 glowMid;
+uniform vec3 glowCrest;
 
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -55,10 +58,6 @@ void main() {
     float sheen = pow(max(dot(n, vec3(0.0, 1.0, 0.0)), 0.0), 6.0) * 0.12;
     vec3 waterTint = vec3(0.10, 0.35, 0.60) * sheen * (0.5 + waveT * 0.5);
 
-    // ---- edge glow: blue -> teal -> amber ----
-    vec3 glowDeep  = vec3(0.03, 0.20, 0.60);
-    vec3 glowMid   = vec3(0.00, 0.70, 0.65);
-    vec3 glowCrest = vec3(0.90, 0.60, 0.10);
     vec3 glowColor = mix(glowDeep, glowMid, waveT);
     glowColor = mix(glowColor, glowCrest, smoothstep(0.65, 1.0, waveT));
     float glowIntensity = (0.6 + pulse * 0.4) * (0.4 + waveT * 0.8);

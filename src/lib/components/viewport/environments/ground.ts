@@ -31,9 +31,22 @@ export class GroundManager {
 			},
 			{
 				attributes: ['position', 'normal', 'world0', 'world1', 'world2', 'world3'],
-				uniforms: ['worldViewProjection', 'time', 'view', 'vFogInfos', 'vFogColor']
+				uniforms: [
+					'worldViewProjection',
+					'time',
+					'view',
+					'vFogInfos',
+					'vFogColor',
+					'glowDeep',
+					'glowMid',
+					'glowCrest'
+				]
 			}
 		);
+		this.shader.setVector3('glowDeep', new Vector3(0.03, 0.2, 0.6));
+		this.shader.setVector3('glowMid', new Vector3(0.0, 0.7, 0.65));
+		this.shader.setVector3('glowCrest', new Vector3(0.9, 0.6, 0.1));
+
 		this.shader.backFaceCulling = true;
 		this.shader.fogEnabled = true;
 		this.base.material = this.shader;
